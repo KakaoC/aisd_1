@@ -223,7 +223,239 @@ public:
 		temp -= m;
 		return temp;
 	}
+
   //оператор умножения матриц+остаток надо сделать
+	matrix& operator*=(const matrix& m) 
+	{
+		if (columns != m.rows) throw "Size of matrix doesn't equal";
+
+		double** temp;
+
+		temp = new double* [rows];
+		for (int i = 0; i < rows; i++)
+		{
+			temp[i] = new double[m.columns];
+		}
+
+		for (int rows_ = 0; rows_ < rows; rows_++)
+		{
+			for (int col = 0; col < m.columns; col++)
+			{
+				temp[rows_][col] = 0;
+				for (int in_column = 0; in_column < columns; in_column++)
+				{
+					temp[rows_][col] += data[rows_][in_column] * m.data[in_column][col];
+				}
+			}
+		}
+
+		columns = m.columns;
+
+		for (int i = 0; i < rows; i++)
+		{
+			delete[] data[i];
+		}
+		delete[] data;
+
+		data = temp;
+		return *this;
+	}
+
+	matrix operator*(const matrix& m) 
+	{
+		matrix temp(*this);
+		temp *= m;
+		return temp;
+	}
+
+	//оператор умножения матрицы на скаляр(обеспечить коммутативность);
+	matrix& operator *= (double n) 
+	{
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < columns; j++)
+			{
+				data[i][j] *= n;
+			}
+		}
+		return *this;
+	}
+	matrix operator*(double n) 
+	{
+		matrix temp(*this);
+		temp *= n;
+		return temp;
+	}
+	//оператор деления матрицы на скаляр;
+
+	matrix& operator/=(double n) 
+	{
+		if (n == 0) throw "Division by zero";
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < columns; j++)
+			{
+				data[i][j] /= n;
+			}
+		}
+		return *this;
+	}
+
+	matrix operator/(double n) 
+	{
+		matrix temp(*this);
+		temp /= n;
+		return temp;
+	}
+
+	//метод вычисления следа матрицы - сумма членов главной диагонали, при условии, что матрица - квадратичная
+	double trace() 
+	{
+		if (rows != columns) throw "The matrix is not square";
+		double trace = 0;
+		for (int i = 0, j = 0; i < rows; i++, j++)
+		{
+			trace += data[i][j];
+		}
+		return trace;
+	}
+
+	//Сравнение матриц
+	bool operator==(const matrix& m) 
+	{
+		if (rows != m.rows or columns != m.columns) 
+		{
+			return false;
+		}
+		else 
+		{
+			for (int i = 0; i < rows; i++)
+			{
+				for (int j = 0; j < columns; j++)
+				{
+					if (abs(data[i][j] - m.data[i][j]) > epsilon) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+	}
+
+	bool operator!=(const matrix& m) {
+		return !(*this == m);
+	}
+
+	friend double determinant(const matrix& m, int N) {
+		if (m.columns != m.rows) {
+			return 0;
+		}
+		else if (N == 1) {
+			return m.data[0][0];
+		}
+		else if (N == 2) {
+			return m.data[0][0] * m.data[1][1] - m.data[0][1] * m.data[1][0];
+		}
+		else if (N >= 3) {
+			double determ = 0;
+
+			for (int k = 0; k < N; k++) {
+
+				double** temp = new double* [N - 1];
+				for (int i = 0; i < N - 1; i++) {
+					temp[i] = new double[N - 1];
+				}
+
+				for (int i = 0; i < N; i++) 
+				{
+					for (int j = 1; j < N; j++) 
+					{
+						if (i > k) 
+						{
+							temp[i - 1][j - 1] = m.data[i][j];
+						}
+						if (i < k)
+						{
+							temp[i][j - 1] = m.data[i][j];
+						}
+					}
+				}
+
+				determ += pow(-1, k + 2) * m.data[k][0] * determinant(matrix(temp, N - 1, N - 1), N - 1);
+
+				for (int i = 0; i < N - 1; i++)
+				{
+					delete[] temp[i];
+				}
+				delete[] temp;
+			}
+			return determ;
+		}
+	}
+
+	matrix& operator = (const matrix& m) {
+		for (int i = 0; i < rows; i++)
+		{
+			delete[] data[i];
+		}
+		delete[] data;
+		data = new double* [m.rows];
+		for (int i = 0; i < m.rows; ++i)
+		{
+			data[i] = new double[m.columns];
+		}
+
+		rows = m.rows;
+		columns = m.columns;
+
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 0; j < columns; j++)
+			{
+				data[i][j] = m.data[i][j];
+			}
+		}
+		return *this;
+	}
+
+};
+
+matrix& operator*= (double n, matrix& m)
+{
+	for (int i = 0; i < m.get_rows(); i++)
+	{
+		for (int j = 0; j < m.get_columns(); j++)
+		{
+			m(i, j) *= n;
+		}
+	}
+	return m;
+}
+
+matrix operator* (double n, matrix& m) {
+	matrix temp(m);
+	return n *= temp;
+}
+
+ostream& operator << (ostream& os, const matrix& m)
+{
+	for (int i = 0; i < m.get_rows(); ++i)
+	{
+		for (int j = 0; j < m.get_columns(); ++j)
+		{
+			os << left << m(i, j) << '\t';
+		}
+		os << endl;
+	}
+	return os;
+}
+
+bool coplanarns(const matrix& a, const matrix& b, const matrix& c) 
+{
+	matrix final(a, b, c);
+	double  det = determinant(final, final.get_columns());
+	if (det == 0) return true;
+	else return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////
