@@ -1,4 +1,3 @@
-#pragma once
 #include <iostream>
 #include <string>
 #include <stdlib.h>
@@ -8,6 +7,65 @@ using namespace std;
 
 double epsilon = 0.000000001;
 
+bool test_int(char* b)
+{
+	if (*b == '-') b++;
+	if (*b == 0) return false;
+	if (*b == '0' && *(b + 1) != 0) return false;
+	while (*b)
+	{
+		if (*b < '0' || *b>'9') return false;
+		b++;
+	}
+	return true;
+}
+
+bool test_double(char* b)
+{
+	if (*b == '-') b++;
+	if (*b == 0 || *b == '.') return false;
+	if (*b == '0' && (*(b + 1) != 0 && *(b + 1) != '.')) return false;
+	while (*b != 0 && *b != '.')
+	{
+		if (*b < '0' || *b > '9') return false;
+		b++;
+	}
+	if (*b == '.')
+	{
+		b++;
+		if (*b == 0) return false;
+		while (*b)
+		{
+			if (*b < '0' || *b > '9') return false;
+			b++;
+		}
+	}
+	return true;
+}
+
+template <class Type>
+Type scan(int n)
+{
+	bool i = false;
+	while (true)
+	{
+		char* str = new char[256];
+		std::cin.getline(str, 256);
+		if (n == 1) i = test_int(str);
+		if (n == 2) i = test_double(str);
+		if (i)
+		{
+			Type x = 0;
+			if (n == 1) x = atoi(str);
+			if (n == 2) x = atof(str);
+			delete[] str;
+			return x;
+		}
+		else puts("Wrong data");
+		delete[]str;
+	}
+}
+
 class matrix
 {
 private:
@@ -15,11 +73,11 @@ private:
 	int columns, rows;
 
 public:
-	matrix() 
+	matrix()
 	{
 		columns = 3;
 		rows = 3;
-		data = new double*[rows];
+		data = new double* [rows];
 		for (int i = 0; i < rows; ++i)
 		{
 			data[i] = new double[columns];
@@ -33,7 +91,7 @@ public:
 		}
 	}
 
-	matrix(int rows_, int columns_) 
+	matrix(int rows_, int columns_)
 	{
 		if (columns_ < 1 or rows_ < 1) throw "Invalid matrix size";
 
@@ -52,14 +110,14 @@ public:
 			{
 				double _temp;
 				cout << "Input value of index [" << i + 1 << "][" << j + 1 << "]: ";
-				cin >> _temp;
+				_temp = scan<double>(2);
 				data[i][j] = _temp;
 				cout << endl;
 			}
 		}
 	}
 
-	matrix(const matrix& m) 
+	matrix(const matrix& m)
 	{
 		data = new double* [m.rows];
 		for (int i = 0; i < m.rows; ++i)
@@ -80,7 +138,7 @@ public:
 
 	}
 
-	matrix(double** temp, int rows_, int columns_) 
+	matrix(double** temp, int rows_, int columns_)
 	{
 		if (rows_ < 1 or columns_ < 1) throw "Invalid matrix size";
 
@@ -102,7 +160,7 @@ public:
 		}
 	}
 
-	matrix(const matrix& a, const matrix& b, const matrix& c) 
+	matrix(const matrix& a, const matrix& b, const matrix& c)
 	{
 		if ((a.rows != 1 or a.columns != 3) or (b.rows != 1 or b.columns != 3) or (c.rows != 1 or c.columns != 3)) throw "Invalid matrix size";
 
@@ -130,7 +188,7 @@ public:
 
 	}
 
-	~matrix() 
+	~matrix()
 	{
 		for (int i = 0; i < rows; i++)
 		{
@@ -152,7 +210,7 @@ public:
 	}
 
 	//операторы сложения и вычитания матриц;
-	matrix& operator+=(const matrix& m) 
+	matrix& operator+=(const matrix& m)
 	{
 		if (rows != m.rows or columns != m.columns) throw "Size of matrix doesn't equal";
 		double** temp;
@@ -181,14 +239,14 @@ public:
 		return *this;
 	}
 
-	matrix operator+(const matrix& m) const 
+	matrix operator+(const matrix& m) const
 	{
 		matrix temp(*this);
 		temp += m;
 		return temp;
 	}
 
-	matrix& operator-=(const matrix& m) 
+	matrix& operator-=(const matrix& m)
 	{
 		if (rows != m.rows or columns != m.columns) throw "Size of matrix doesn't equal";
 		double** temp;
@@ -217,15 +275,15 @@ public:
 		return *this;
 	}
 
-	matrix operator-(const matrix& m) const 
+	matrix operator-(const matrix& m) const
 	{
 		matrix temp(*this);
 		temp -= m;
 		return temp;
 	}
 
-  //оператор умножения матриц+остаток надо сделать
-	matrix& operator*=(const matrix& m) 
+	//оператор умножения матриц;
+	matrix& operator*=(const matrix& m)
 	{
 		if (columns != m.rows) throw "Size of matrix doesn't equal";
 
@@ -261,7 +319,7 @@ public:
 		return *this;
 	}
 
-	matrix operator*(const matrix& m) 
+	matrix operator*(const matrix& m)
 	{
 		matrix temp(*this);
 		temp *= m;
@@ -269,7 +327,8 @@ public:
 	}
 
 	//оператор умножения матрицы на скаляр(обеспечить коммутативность);
-	matrix& operator *= (double n) 
+
+	matrix& operator *= (double n)
 	{
 		for (int i = 0; i < rows; i++)
 		{
@@ -280,7 +339,7 @@ public:
 		}
 		return *this;
 	}
-	matrix operator*(double n) 
+	matrix operator*(double n)
 	{
 		matrix temp(*this);
 		temp *= n;
@@ -288,7 +347,7 @@ public:
 	}
 	//оператор деления матрицы на скаляр;
 
-	matrix& operator/=(double n) 
+	matrix& operator/=(double n)
 	{
 		if (n == 0) throw "Division by zero";
 		for (int i = 0; i < rows; i++)
@@ -301,7 +360,7 @@ public:
 		return *this;
 	}
 
-	matrix operator/(double n) 
+	matrix operator/(double n)
 	{
 		matrix temp(*this);
 		temp /= n;
@@ -309,7 +368,7 @@ public:
 	}
 
 	//метод вычисления следа матрицы - сумма членов главной диагонали, при условии, что матрица - квадратичная
-	double trace() 
+	double trace()
 	{
 		if (rows != columns) throw "The matrix is not square";
 		double trace = 0;
@@ -321,13 +380,13 @@ public:
 	}
 
 	//Сравнение матриц
-	bool operator==(const matrix& m) 
+	bool operator==(const matrix& m)
 	{
-		if (rows != m.rows or columns != m.columns) 
+		if (rows != m.rows or columns != m.columns)
 		{
 			return false;
 		}
-		else 
+		else
 		{
 			for (int i = 0; i < rows; i++)
 			{
@@ -366,11 +425,11 @@ public:
 					temp[i] = new double[N - 1];
 				}
 
-				for (int i = 0; i < N; i++) 
+				for (int i = 0; i < N; i++)
 				{
-					for (int j = 1; j < N; j++) 
+					for (int j = 1; j < N; j++)
 					{
-						if (i > k) 
+						if (i > k)
 						{
 							temp[i - 1][j - 1] = m.data[i][j];
 						}
@@ -450,7 +509,7 @@ ostream& operator << (ostream& os, const matrix& m)
 	return os;
 }
 
-bool coplanarns(const matrix& a, const matrix& b, const matrix& c) 
+bool coplanarns(const matrix& a, const matrix& b, const matrix& c)
 {
 	matrix final(a, b, c);
 	double  det = determinant(final, final.get_columns());
@@ -458,10 +517,10 @@ bool coplanarns(const matrix& a, const matrix& b, const matrix& c)
 	else return false;
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////MAIN////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
- int main()
+
+
+
+int main()
 {
 	matrix a;
 	matrix b;
@@ -497,7 +556,7 @@ bool coplanarns(const matrix& a, const matrix& b, const matrix& c)
 		if (z == '6' || z == '7')
 		{
 			cout << "Enter  scalar value" << endl;
-			cin >> n;
+			n = scan<double>(2);
 			system("cls");
 		}
 		if (z == '1')
@@ -518,9 +577,9 @@ bool coplanarns(const matrix& a, const matrix& b, const matrix& c)
 				{
 					int rows, columns;
 					cout << "Enter number of rows" << endl;
-					cin >> rows;
+					rows = scan<int>(1);
 					cout << "Enter number of columns" << endl;
-					cin >> columns;
+					columns = scan<int>(1);
 					matrix d(rows, columns);
 					if (l == '1') a = d;
 					else b = d;
@@ -538,11 +597,11 @@ bool coplanarns(const matrix& a, const matrix& b, const matrix& c)
 			int index_row, index_column;
 			double value;
 			cout << "Enter index_row" << endl;
-			cin >> index_row;
+			index_row = scan<int>(1);
 			cout << "Enter index_column" << endl;
-			cin >> index_column;
+			index_column = scan<int>(1);
 			cout << "Enter value" << endl;
-			cin >> value;
+			value = scan<double>(2);
 			try
 			{
 				if (l == '1') a(index_row, index_column) = value;
@@ -665,7 +724,7 @@ bool coplanarns(const matrix& a, const matrix& b, const matrix& c)
 		if (z == '0')
 		{
 			cout << "Enter epsilon" << endl;
-			cin >> epsilon;
+			epsilon = scan<double>(2);
 			if (a == b) cout << "Matrices are the same";
 			if (a != b) cout << "Matrices are different";
 			if (getch()) z = 0;
